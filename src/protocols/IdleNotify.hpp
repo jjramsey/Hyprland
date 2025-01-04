@@ -17,6 +17,8 @@ class CExtIdleNotification {
     void onTimerFired();
     void onActivity();
 
+    bool inhibitorsAreObeyed() const;
+
   private:
     SP<CExtIdleNotificationV1> resource;
     uint32_t                   timeoutMs = 0;

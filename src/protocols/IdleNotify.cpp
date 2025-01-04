@@ -55,6 +55,10 @@ void CExtIdleNotification::onActivity() {
     updateTimer();
 }
 
+bool CExtIdleNotification::inhibitorsAreObeyed() const {
+    return obeyInhibitors;
+}
+
 CIdleNotifyProtocol::CIdleNotifyProtocol(const wl_interface* iface, const int& ver, const std::string& name) : IWaylandProtocol(iface, ver, name) {
     ;
 }
@@ -99,7 +103,7 @@ void CIdleNotifyProtocol::onActivity() {
 void CIdleNotifyProtocol::setInhibit(bool inhibited) {
     isInhibited = inhibited;
     for (auto const& n : m_vNotifications) {
-        if (n->obeyInhibitors)
+        if (n->inhibitorsAreObeyed())
             n->onActivity();
     }
 }
