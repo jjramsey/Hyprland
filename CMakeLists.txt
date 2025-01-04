@@ -337,7 +337,9 @@ protocolnew("unstable/text-input" "text-input-unstable-v3" false)
 protocolnew("unstable/pointer-constraints" "pointer-constraints-unstable-v1"
             false)
 protocolnew("staging/xdg-activation" "xdg-activation-v1" false)
-protocolnew("staging/ext-idle-notify" "ext-idle-notify-v1" false)
+# JJR: This change is TEMPORARY, only here to allow build w/o my fork of wayland-protocols
+# protocolnew("staging/ext-idle-notify" "ext-idle-notify-v1" false)
+protocolnew("protocols" "ext-idle-notify-v1" true) # Again, TEMPORARY!
 protocolnew("staging/ext-session-lock" "ext-session-lock-v1" false)
 protocolnew("stable/tablet" "tablet-v2" false)
 protocolnew("stable/presentation-time" "presentation-time" false)

@@ -53,7 +53,9 @@ protocols = [
 	wayland_protocol_dir / 'unstable/text-input/text-input-unstable-v1.xml',
 	wayland_protocol_dir / 'unstable/pointer-constraints/pointer-constraints-unstable-v1.xml',
 	wayland_protocol_dir / 'staging/xdg-activation/xdg-activation-v1.xml',
-	wayland_protocol_dir / 'staging/ext-idle-notify/ext-idle-notify-v1.xml',
+	# JJR: This change is TEMPORARY, only here to allow build w/o my fork of wayland-protocols
+	# wayland_protocol_dir / 'staging/ext-idle-notify/ext-idle-notify-v1.xml',
+	'ext-idle-notify-v1.xml', # Again, TEMPORARY!
 	wayland_protocol_dir / 'staging/ext-session-lock/ext-session-lock-v1.xml',
 	wayland_protocol_dir / 'stable/tablet/tablet-v2.xml',
 	wayland_protocol_dir / 'stable/presentation-time/presentation-time.xml',
