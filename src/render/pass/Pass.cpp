@@ -88,7 +88,7 @@ void CRenderPass::simplify() {
             }
             newDamage.subtract(opaque);
             if (*PDEBUGPASS)
-                occludedRegion.add(opaque);
+                occludedRegions.emplace_back(opaque);
         }
     }
 
@@ -114,9 +114,11 @@ CRegion CRenderPass::render(const CRegion& damage_) {
 
     const auto  WILLBLUR = std::ranges::any_of(m_vPassElements, [](const auto& el) { return el->element->needsLiveBlur(); });
 
-    damage              = *PDEBUGPASS ? CRegion{CBox{{}, {INT32_MAX, INT32_MAX}}} : damage_.copy();
-    occludedRegion      = CRegion{};
-    totalLiveBlurRegion = CRegion{};
+    damage = *PDEBUGPASS ? CRegion{CBox{{}, {INT32_MAX, INT32_MAX}}} : damage_.copy();
+    if (*PDEBUGPASS) {
+        occludedRegions.clear();
+        totalLiveBlurRegion = CRegion{};
+    }
 
     if (damage.empty()) {
         g_pHyprOpenGL->m_RenderData.damage      = damage;
@@ -198,7 +200,9 @@ CRegion CRenderPass::render(const CRegion& damage_) {
 
 void CRenderPass::renderDebugData() {
     CBox box = {{}, g_pHyprOpenGL->m_RenderData.pMonitor->vecTransformedSize};
-    g_pHyprOpenGL->renderRectWithDamage(&box, Colors::RED.modifyA(0.1F), occludedRegion);
+    for (const auto& rg : occludedRegions) {
+        g_pHyprOpenGL->renderRectWithDamage(&box, Colors::RED.modifyA(0.1F), rg);
+    }
     g_pHyprOpenGL->renderRectWithDamage(&box, Colors::GREEN.modifyA(0.1F), totalLiveBlurRegion);
 
     std::unordered_map<CWLSurfaceResource*, float> offsets;
@@ -222,12 +226,13 @@ void CRenderPass::renderDebugData() {
         if (box.intersection(CBox{{}, g_pHyprOpenGL->m_RenderData.pMonitor->vecSize}).empty())
             return;
 
+        g_pHyprOpenGL->renderRectWithDamage(&box, color, CRegion{0, 0, INT32_MAX, INT32_MAX});
+
         if (offsets.contains(surface.get()))
             box.translate(Vector2D{0.F, offsets[surface.get()]});
         else
             offsets[surface.get()] = 0;
 
-        g_pHyprOpenGL->renderRectWithDamage(&box, Colors::PURPLE.modifyA(0.1F), CRegion{0, 0, INT32_MAX, INT32_MAX});
         box = {box.pos(), texture->m_vSize};
         g_pHyprOpenGL->renderRectWithDamage(&box, CHyprColor{0.F, 0.F, 0.F, 0.2F}, CRegion{0, 0, INT32_MAX, INT32_MAX}, std::min(5.0, box.size().y));
         g_pHyprOpenGL->renderTexture(texture, &box, 1.F);
@@ -239,6 +244,34 @@ void CRenderPass::renderDebugData() {
     renderHLSurface(debugData.pointerFocusText, g_pSeatManager->state.pointerFocus.lock(), Colors::ORANGE.modifyA(0.1F));
     if (g_pCompositor->m_pLastWindow)
         renderHLSurface(debugData.lastWindowText, g_pCompositor->m_pLastWindow->m_pWLSurface->resource(), Colors::LIGHT_BLUE.modifyA(0.1F));
+
+    const auto DISCARDED_ELEMENTS = std::count_if(m_vPassElements.begin(), m_vPassElements.end(), [](const auto& e) { return e->discard; });
+    auto tex = g_pHyprOpenGL->renderText(std::format("occlusion layers: {}\npass elements: {} ({} discarded)\nviewport: {:X0}", occludedRegions.size(), m_vPassElements.size(),
+                                                     DISCARDED_ELEMENTS, g_pHyprOpenGL->m_RenderData.pMonitor->vecPixelSize),
+                                         Colors::WHITE, 12);
+
+    if (tex) {
+        box = CBox{{0.F, g_pHyprOpenGL->m_RenderData.pMonitor->vecSize.y - tex->m_vSize.y}, tex->m_vSize}.scale(g_pHyprOpenGL->m_RenderData.pMonitor->scale);
+        g_pHyprOpenGL->renderTexture(tex, &box, 1.F);
+    }
+
+    std::string passStructure;
+    auto        yn   = [](const bool val) -> const char* { return val ? "yes" : "no"; };
+    auto        tick = [](const bool val) -> const char* { return val ? "✔" : "✖"; };
+    for (const auto& el : m_vPassElements | std::views::reverse) {
+        passStructure += std::format("{} {} (bb: {} op: {})\n", tick(!el->discard), el->element->passName(), yn(el->element->boundingBox().has_value()),
+                                     yn(!el->element->opaqueRegion().empty()));
+    }
+
+    if (!passStructure.empty())
+        passStructure.pop_back();
+
+    tex = g_pHyprOpenGL->renderText(passStructure, Colors::WHITE, 12);
+    if (tex) {
+        box = CBox{{g_pHyprOpenGL->m_RenderData.pMonitor->vecSize.x - tex->m_vSize.x, g_pHyprOpenGL->m_RenderData.pMonitor->vecSize.y - tex->m_vSize.y}, tex->m_vSize}.scale(
+            g_pHyprOpenGL->m_RenderData.pMonitor->scale);
+        g_pHyprOpenGL->renderTexture(tex, &box, 1.F);
+    }
 }
 
 float CRenderPass::oneBlurRadius() {

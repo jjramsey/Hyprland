@@ -140,6 +140,12 @@ inline static const std::vector<SConfigOptionDescription> CONFIG_OPTIONS = {
         .data        = SConfigOptionDescription::SRangeData{0, 0, 20},
     },
     SConfigOptionDescription{
+        .value       = "decoration:rounding_power",
+        .description = "rouding power of corners (2 is a circle)",
+        .type        = CONFIG_OPTION_FLOAT,
+        .data        = SConfigOptionDescription::SFloatData{2, 2, 10},
+    },
+    SConfigOptionDescription{
         .value       = "decoration:active_opacity",
         .description = "opacity of active windows. [0.0 - 1.0]",
         .type        = CONFIG_OPTION_FLOAT,
@@ -1627,6 +1633,12 @@ inline static const std::vector<SConfigOptionDescription> CONFIG_OPTIONS = {
         .data        = SConfigOptionDescription::SRangeData{2, 0, 10}, //##TODO RANGE?
     },
     SConfigOptionDescription{
+        .value       = "master:center_master_slaves_on_right",
+        .description = "set if the slaves should appear on right of master when slave_count_for_center_master > 2",
+        .type        = CONFIG_OPTION_BOOL,
+        .data        = SConfigOptionDescription::SBoolData{true},
+    },
+    SConfigOptionDescription{
         .value       = "master:center_ignores_reserved",
         .description = "centers the master window on monitor ignoring reserved areas",
         .type        = CONFIG_OPTION_BOOL,
@@ -1645,5 +1657,23 @@ inline static const std::vector<SConfigOptionDescription> CONFIG_OPTIONS = {
                        "top/bottom of the stack depending on new_on_top.",
         .type        = CONFIG_OPTION_BOOL,
         .data        = SConfigOptionDescription::SBoolData{true},
+    },
+    SConfigOptionDescription{
+        .value       = "experimental:wide_color_gamut",
+        .description = "force wide color gamut for all supported outputs",
+        .type        = CONFIG_OPTION_BOOL,
+        .data        = SConfigOptionDescription::SBoolData{false},
+    },
+    SConfigOptionDescription{
+        .value       = "experimental:hdr",
+        .description = "force static hdr for all supported outputs",
+        .type        = CONFIG_OPTION_BOOL,
+        .data        = SConfigOptionDescription::SBoolData{false},
+    },
+    SConfigOptionDescription{
+        .value       = "experimental:xx_color_management_v4",
+        .description = "enable color management protocol",
+        .type        = CONFIG_OPTION_BOOL,
+        .data        = SConfigOptionDescription::SBoolData{false},
     },
 };
