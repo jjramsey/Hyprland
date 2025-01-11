@@ -983,7 +983,14 @@ uint64_t CKeybindManager::spawnRawProc(std::string args, PHLWORKSPACE pInitialWo
 }
 
 SDispatchResult CKeybindManager::killActive(std::string args) {
-    kill(g_pCompositor->m_pLastWindow.lock()->getPID(), SIGKILL);
+    const auto PWINDOW = g_pCompositor->m_pLastWindow.lock();
+
+    if (!PWINDOW) {
+        Debug::log(ERR, "killActive: no window found");
+        return {.success = false, .error = "killActive: no window found"};
+    }
+
+    kill(PWINDOW->getPID(), SIGKILL);
 
     return {};
 }
@@ -1891,8 +1898,8 @@ SDispatchResult CKeybindManager::workspaceOpt(std::string args) {
                 continue;
 
             if (!w->m_bRequestsFloat && w->m_bIsFloating != PWORKSPACE->m_bDefaultFloating) {
-                const auto SAVEDPOS  = w->m_vRealPosition->value();
-                const auto SAVEDSIZE = w->m_vRealSize->value();
+                const auto SAVEDPOS  = w->m_vRealPosition->goal();
+                const auto SAVEDSIZE = w->m_vRealSize->goal();
 
                 w->m_bIsFloating = PWORKSPACE->m_bDefaultFloating;
                 g_pLayoutManager->getCurrentLayout()->changeWindowFloatingMode(w);
